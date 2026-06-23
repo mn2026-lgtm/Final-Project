@@ -3,6 +3,7 @@
 <h1> Software Engineering-Final Project</h1>
 
 <body>
+    
 <?php
 // 1. Start the session to track cart items
 session_start();
