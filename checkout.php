@@ -1,3 +1,93 @@
+<?php
+// ALL PHP logic must run before ANY HTML output
+session_start();
+
+// Redirect to store if cart is empty
+if (empty($_SESSION['cart'])) {
+    header('Location: index.php');
+    exit;
+}
+
+$products = [
+    1 => ['name' => 'Rutgers Scarlet Hoodie',             'price' => 49.99,  'available' => true],
+    2 => ['name' => 'Retro Leather Basketball',            'price' => 29.95,  'available' => true],
+    3 => ['name' => 'Wireless Noise-Canceling Headphones', 'price' => 149.99, 'available' => false],
+    4 => ['name' => 'Aluminum Water Bottle (32oz)',         'price' => 18.50,  'available' => true],
+];
+
+$errors = [];
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $firstName  = trim($_POST['first_name']  ?? '');
+    $lastName   = trim($_POST['last_name']   ?? '');
+    $email      = trim($_POST['email']       ?? '');
+    $address    = trim($_POST['address']     ?? '');
+    $city       = trim($_POST['city']        ?? '');
+    $state      = trim($_POST['state']       ?? '');
+    $zip        = trim($_POST['zip']         ?? '');
+    $cardName   = trim($_POST['card_name']   ?? '');
+    $cardNumber = preg_replace('/\s+/', '', $_POST['card_number'] ?? '');
+    $expMonth   = trim($_POST['exp_month']   ?? '');
+    $expYear    = trim($_POST['exp_year']    ?? '');
+    $cvv        = trim($_POST['cvv']         ?? '');
+
+    if (!$firstName) $errors[] = 'First name is required.';
+    if (!$lastName)  $errors[] = 'Last name is required.';
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'A valid email address is required.';
+    if (!$address)   $errors[] = 'Street address is required.';
+    if (!$city)      $errors[] = 'City is required.';
+    if (!$state)     $errors[] = 'State is required.';
+    if (!preg_match('/^\d{5}(-\d{4})?$/', $zip)) $errors[] = 'A valid ZIP code is required.';
+    if (!$cardName)  $errors[] = 'Name on card is required.';
+    if (!preg_match('/^\d{13,19}$/', $cardNumber)) $errors[] = 'A valid card number is required (13–19 digits).';
+    if (!$expMonth || !$expYear) $errors[] = 'Expiration date is required.';
+    if (!preg_match('/^\d{3,4}$/', $cvv)) $errors[] = 'CVV must be 3 or 4 digits.';
+
+    if (empty($errors)) {
+        $orderItems = [];
+        $grandTotal = 0;
+        foreach ($_SESSION['cart'] as $id => $qty) {
+            if (!isset($products[$id])) continue;
+            $subtotal = $products[$id]['price'] * $qty;
+            $grandTotal += $subtotal;
+            $orderItems[] = [
+                'name'     => $products[$id]['name'],
+                'qty'      => $qty,
+                'subtotal' => $subtotal,
+            ];
+        }
+        $_SESSION['last_order'] = [
+            'items' => $orderItems,
+            'total' => $grandTotal,
+            'name'  => "$firstName $lastName",
+            'email' => $email,
+            'last4' => substr($cardNumber, -4),
+        ];
+        $_SESSION['cart'] = [];
+
+        $emailBody = "Hi $firstName,\n\nThank you for your order!\n\nOrder Summary:\n";
+        foreach ($orderItems as $item) {
+            $emailBody .= sprintf("  - %s x%d: $%s\n", $item['name'], $item['qty'], number_format($item['subtotal'], 2));
+        }
+        $emailBody .= "\nTotal: $" . number_format($grandTotal, 2) . "\n\nShipping to:\n$address, $city, $state $zip\n";
+        $headers = "From: webmaster@example.com\r\nReply-To: webmaster@example.com\r\nX-Mailer: PHP/" . phpversion();
+        @mail($email, "Order Confirmation – Simple Web Store", $emailBody, $headers);
+
+        header('Location: confirmation.php');
+        exit;
+    }
+}
+
+// Compute sidebar totals (only reached if GET or POST with errors)
+$cartTotal = 0;
+$cartItems = [];
+foreach ($_SESSION['cart'] as $id => $qty) {
+    if (!isset($products[$id])) continue;
+    $subtotal = $products[$id]['price'] * $qty;
+    $cartTotal += $subtotal;
+    $cartItems[] = ['name' => $products[$id]['name'], 'qty' => $qty, 'subtotal' => $subtotal];
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,10 +106,8 @@
         header a:hover { text-decoration: underline; }
 
         .page-wrap { max-width: 960px; margin: 30px auto; padding: 0 20px; display: flex; gap: 30px; align-items: flex-start; }
-
         .panel { background: white; border-radius: 8px; padding: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
 
-        /* --- Payment form --- */
         .payment-form { flex: 3; }
         .payment-form h2 { font-size: 18px; margin-bottom: 20px; }
 
@@ -31,7 +119,6 @@
 
         .field-row { display: flex; gap: 14px; }
         .field-row .field { flex: 1; }
-
         .field { margin-bottom: 14px; }
         .field label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; }
         .field input, .field select {
@@ -55,117 +142,18 @@
             font-weight: bold; cursor: pointer;
         }
         .btn-place-order:hover { background: #a30028; }
-
         .secure-note { text-align: center; color: #888; font-size: 12px; margin-top: 10px; }
 
-        /* --- Order summary --- */
         .order-summary { flex: 2; min-width: 240px; position: sticky; top: 20px; }
         .order-summary h2 { font-size: 18px; margin-bottom: 16px; }
-
         .summary-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; font-size: 14px; }
         .summary-item span:first-child { color: #555; }
         .summary-total { display: flex; justify-content: space-between; font-size: 17px; font-weight: bold; margin-top: 12px; padding-top: 10px; border-top: 2px solid #333; }
 
-        .empty-warn { color: #888; font-style: italic; }
         .alert { background: #f8d7da; color: #721c24; padding: 12px 16px; border-radius: 6px; margin-bottom: 16px; font-size: 14px; }
     </style>
 </head>
 <body>
-
-<?php
-session_start();
-
-// Redirect to store if cart is empty
-if (empty($_SESSION['cart'])) {
-    header('Location: index.php');
-    exit;
-}
-
-$products = [
-    1 => ['name' => 'Rutgers Scarlet Hoodie',             'price' => 49.99,  'available' => true],
-    2 => ['name' => 'Retro Leather Basketball',            'price' => 29.95,  'available' => true],
-    3 => ['name' => 'Wireless Noise-Canceling Headphones', 'price' => 149.99, 'available' => false],
-    4 => ['name' => 'Aluminum Water Bottle (32oz)',         'price' => 18.50,  'available' => true],
-];
-
-// Validation errors
-$errors = [];
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $firstName  = trim($_POST['first_name']  ?? '');
-    $lastName   = trim($_POST['last_name']   ?? '');
-    $email      = trim($_POST['email']       ?? '');
-    $address    = trim($_POST['address']     ?? '');
-    $city       = trim($_POST['city']        ?? '');
-    $state      = trim($_POST['state']       ?? '');
-    $zip        = trim($_POST['zip']         ?? '');
-    $cardName   = trim($_POST['card_name']   ?? '');
-    $cardNumber = preg_replace('/\s+/', '', $_POST['card_number'] ?? '');
-    $expMonth   = trim($_POST['exp_month']   ?? '');
-    $expYear    = trim($_POST['exp_year']    ?? '');
-    $cvv        = trim($_POST['cvv']         ?? '');
-
-    // Basic validation
-    if (!$firstName) $errors[] = 'First name is required.';
-    if (!$lastName)  $errors[] = 'Last name is required.';
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'A valid email address is required.';
-    if (!$address)   $errors[] = 'Street address is required.';
-    if (!$city)      $errors[] = 'City is required.';
-    if (!$state)     $errors[] = 'State is required.';
-    if (!preg_match('/^\d{5}(-\d{4})?$/', $zip)) $errors[] = 'A valid ZIP code is required.';
-    if (!$cardName)  $errors[] = 'Name on card is required.';
-    if (!preg_match('/^\d{13,19}$/', $cardNumber)) $errors[] = 'A valid card number is required (13–19 digits).';
-    if (!$expMonth || !$expYear)  $errors[] = 'Expiration date is required.';
-    if (!preg_match('/^\d{3,4}$/', $cvv)) $errors[] = 'CVV must be 3 or 4 digits.';
-
-    if (empty($errors)) {
-        // Store order summary in session for confirmation page
-        $orderItems = [];
-        $grandTotal = 0;
-        foreach ($_SESSION['cart'] as $id => $qty) {
-            if (!isset($products[$id])) continue;
-            $subtotal = $products[$id]['price'] * $qty;
-            $grandTotal += $subtotal;
-            $orderItems[] = [
-                'name'     => $products[$id]['name'],
-                'qty'      => $qty,
-                'subtotal' => $subtotal,
-            ];
-        }
-        $_SESSION['last_order'] = [
-            'items'      => $orderItems,
-            'total'      => $grandTotal,
-            'name'       => "$firstName $lastName",
-            'email'      => $email,
-            'last4'      => substr($cardNumber, -4),
-        ];
-
-        $_SESSION['cart'] = []; // Clear cart
-
-        // Send confirmation email (best-effort)
-        $emailBody  = "Hi $firstName,\n\nThank you for your order!\n\nOrder Summary:\n";
-        foreach ($orderItems as $item) {
-            $emailBody .= sprintf("  - %s x%d: $%s\n", $item['name'], $item['qty'], number_format($item['subtotal'], 2));
-        }
-        $emailBody .= "\nTotal: $" . number_format($grandTotal, 2) . "\n\nYour order will ship to:\n$address, $city, $state $zip\n";
-        $headers = "From: webmaster@example.com\r\nReply-To: webmaster@example.com\r\nX-Mailer: PHP/" . phpversion();
-        @mail($email, "Order Confirmation – Simple Web Store", $emailBody, $headers);
-
-        header('Location: confirmation.php');
-        exit;
-    }
-}
-
-// Compute totals for sidebar
-$cartTotal = 0;
-$cartItems = [];
-foreach ($_SESSION['cart'] as $id => $qty) {
-    if (!isset($products[$id])) continue;
-    $subtotal = $products[$id]['price'] * $qty;
-    $cartTotal += $subtotal;
-    $cartItems[] = ['name' => $products[$id]['name'], 'qty' => $qty, 'subtotal' => $subtotal];
-}
-?>
 
 <header>
     <h1>🛒 Checkout</h1>
@@ -186,7 +174,6 @@ foreach ($_SESSION['cart'] as $id => $qty) {
         <?php endif; ?>
 
         <form method="POST">
-
             <div class="section-label">Contact</div>
             <div class="field-row">
                 <div class="field">
@@ -276,7 +263,6 @@ foreach ($_SESSION['cart'] as $id => $qty) {
         </form>
     </div>
 
-    <!-- Order Summary Sidebar -->
     <div class="order-summary">
         <div class="panel">
             <h2>Order Summary</h2>
