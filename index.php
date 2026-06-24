@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'add') {
         if (isset($products[$productId]) && $products[$productId]['available']) {
             $_SESSION['cart'][$productId] = ($_SESSION['cart'][$productId] ?? 0) + 1;
-            $message = "Added \u201c" . $products[$productId]['name'] . "\u201d to your cart.";
+            $message = "Added '" . $products[$productId]['name'] . "' to your cart.";
         } else {
             $message     = "Sorry, that item is unavailable.";
             $messageType = 'error';
