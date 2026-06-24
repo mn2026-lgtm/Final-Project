@@ -4,7 +4,6 @@
 <body>
 <?php
 // 1. Start the session to track cart items
-session_start();
 
 // 2. Define the product catalog (Mock Database)
 $products = [
