@@ -1,3 +1,14 @@
+<?php
+session_start();
+
+if (empty($_SESSION['last_order'])) {
+    header('Location: index.php');
+    exit;
+}
+
+$order = $_SESSION['last_order'];
+unset($_SESSION['last_order']);
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,14 +18,10 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: Arial, sans-serif; background: #f4f4f4; color: #333; }
 
-        header {
-            background: #cc0033; color: white;
-            padding: 16px 30px;
-        }
+        header { background: #cc0033; color: white; padding: 16px 30px; }
         header h1 { font-size: 22px; }
 
         .page-wrap { max-width: 620px; margin: 40px auto; padding: 0 20px; }
-
         .panel { background: white; border-radius: 8px; padding: 32px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); text-align: center; }
 
         .check-icon { font-size: 56px; margin-bottom: 14px; }
@@ -39,19 +46,6 @@
     </style>
 </head>
 <body>
-
-<?php
-session_start();
-
-// Redirect to store if no order info
-if (empty($_SESSION['last_order'])) {
-    header('Location: index.php');
-    exit;
-}
-
-$order = $_SESSION['last_order'];
-unset($_SESSION['last_order']); // Show once
-?>
 
 <header>
     <h1>🛒 Simple Web Store</h1>
