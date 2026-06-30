@@ -18,7 +18,7 @@ unset($_SESSION['last_order']);
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Order Confirmed – Simple Web Store</title>
+    <title>Order Confirmed – Rutgers-Newark Store</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: Arial, sans-serif; background: #f4f4f4; color: #333; }
@@ -53,7 +53,7 @@ unset($_SESSION['last_order']);
 <body>
 
 <header>
-    <h1>🛒 Simple Web Store</h1>
+    <h1>🛒 Rutgers-Newark Store</h1>
 </header>
 
 <div class="page-wrap">
