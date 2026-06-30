@@ -71,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $emailBody .= "\nTotal: $" . number_format($grandTotal, 2) . "\n\nShipping to:\n$address, $city, $state $zip\n";
         $headers = "From: webmaster@example.com\r\nReply-To: webmaster@example.com\r\nX-Mailer: PHP/" . phpversion();
-        @mail($email, "Order Confirmation – Simple Web Store", $emailBody, $headers);
+        @mail($email, "Order Confirmation – Rutgers-Newark Store", $emailBody, $headers);
 
         header('Location: confirmation.php');
         exit;
@@ -92,7 +92,7 @@ foreach ($_SESSION['cart'] as $id => $qty) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Checkout – Simple Web Store</title>
+    <title>Checkout – Rutgers-Newark Store</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: Arial, sans-serif; background: #f4f4f4; color: #333; }
