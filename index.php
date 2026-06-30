@@ -152,8 +152,8 @@ $cartCount = array_sum($_SESSION['cart']);
 
 <header>
     <div>
-        <h1>🛒 Simple Web Store</h1>
-        <span>Software Engineering – Final Project</span>
+        <h1>🛒 Rutgers-Newark Store</h1>
+        <span>Powered by Goople LLC</span>
     </div>
 </header>
 
