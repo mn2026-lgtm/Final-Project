@@ -1,5 +1,25 @@
 <?php
+session_set_cookie_params([
+    'lifetime' => 0,
+    'path'     => '/',
+    'domain'   => '',
+    'secure'   => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+    'httponly' => true,
+    'samesite' => 'Lax',
+]);
 session_start();
+
+// Require login
+if (empty($_SESSION['logged_in'])) {
+    header('Location: login.php');
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'logout') {
+    session_destroy();
+    header('Location: login.php');
+    exit;
+}
 
 $products = [
     1 => ['name' => 'Rutgers Scarlet Hoodie',             'price' => 49.99,  'available' => true],
@@ -76,6 +96,7 @@ $cartCount = array_sum($_SESSION['cart']);
             padding: 16px 30px;
             display: flex;
             align-items: center;
+            justify-content: space-between;
             gap: 14px;
         }
         header h1 { font-size: 22px; }
@@ -154,6 +175,13 @@ $cartCount = array_sum($_SESSION['cart']);
     <div>
         <h1>🛒 Rutgers-Newark Store</h1>
         <span>Powered by Goople LLC</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:14px;">
+        <span style="font-size:13px;">Hi, <?= htmlspecialchars($_SESSION['username']) ?></span>
+        <form method="POST" style="margin:0;">
+            <input type="hidden" name="action" value="logout">
+            <button type="submit" style="background:rgba(255,255,255,0.15); color:white; border:1px solid rgba(255,255,255,0.4); padding:6px 14px; border-radius:5px; cursor:pointer; font-size:13px;">Logout</button>
+        </form>
     </div>
 </header>
 
