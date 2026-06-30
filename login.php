@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Login – Simple Web Store</title>
+    <title>Login – Rutgers-Newark Store</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -101,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
 
     <div class="login-card">
-        <h1>🛒 Simple Web Store</h1>
+        <h1>🛒 Rutgers-Newark Store</h1>
         <p class="sub">Sign in to start shopping</p>
 
         <?php if (!empty($error)): ?>
